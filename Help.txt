@@ -1,0 +1,9 @@
+  Install-Package Microsoft.EntityFrameworkCore.SqlServer  >>general
+  Install-Package Microsoft.EntityFrameworkCore.Tools      >>general
+
+  Install-Package Microsoft.EntityFrameworkCore    >>repo
+
+
+  Add-Migration DatabaseCreation
+  Update-Database
+ 

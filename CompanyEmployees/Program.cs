@@ -1,8 +1,7 @@
 using CompanyEmployees.Extensions;
+using Contracts;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Http;
 using NLog;
-using NLog.Fluent;
 
 
 var builder = WebApplication.CreateBuilder(args); //WebApplicationBuilder
@@ -16,22 +15,30 @@ LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(),
 //var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 //LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(),
 //$"/nlog.{environment}.config "));
+builder.Services.ConfigureSqlContext(builder.Configuration);
+
+builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.ConfigureCors();
 builder.Services.ConfigureIISIntegration();
 builder.Services.ConfigureLoggerService();
+
+builder.Services.ConfigureRepositoryManager();
+builder.Services.ConfigureServiceManager();
+
 ////
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(CompanyEmployees.Presentation.AssemblyReference).Assembly);
 
 var app = builder.Build();   ////WebApplication>> (Configure)
                              //IHost, IApplicationBuilder, IEndpointRouteBuilder
-// Configure the HTTP request pipeline.  //middleware
+                             // Configure the HTTP request pipeline.  //middleware
 ///
-if (app.Environment.IsDevelopment())
-    app.UseDeveloperExceptionPage();
-else
-    app.UseHsts();
+//if (app.Environment.IsDevelopment())
+//    app.UseDeveloperExceptionPage();
+//else
+//    app.UseHsts();
 /*
 adds a header Strict-Transport-Security to the response. When the site was accessed using HTTPS then 
 the browser notes it down and future request using HTTP will be redirected to HTTPS. So, accessing the 
@@ -40,6 +47,18 @@ Strict-Transport-Security header elapses, the next attempt to load the site via 
  */
 
 /////
+
+var logger = app.Services.GetRequiredService<ILoggerManager>();
+app.ConfigureExceptionHandler(logger);
+if (app.Environment.IsProduction())
+    app.UseHsts();
+
+
+
+
+
+
+
 app.UseHttpsRedirection();  //redirection from HTTP to HTTPS
 
 /////
